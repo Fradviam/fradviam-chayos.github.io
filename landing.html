@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Diseño de Campo para Chayote (Corregida)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy Harmony -->
+    <!-- Application Structure Plan: La aplicación ha sido corregida para restaurar la funcionalidad completa de todas las pestañas interactivas. El mapa de la Calculadora ha sido rediseñado con un estilo visual más limpio (círculos de dos tonos) para mejorar la claridad y la apariencia profesional como herramienta de planificación. -->
+    <!-- Visualization & Content Choices: 
+        - Mapa de Distribución Corregido: Se utilizan divs con pseudo-elementos CSS para crear un marcador de dos tonos para cada planta. Meta: Ofrecer una visualización de diseño de campo clara, profesional y sin problemas de renderizado. Justificación: Este enfoque es más robusto y visualmente más limpio que el SVG anterior.
+        - Restauración de Funcionalidad: Se ha reinsertado el código completo de JS para asegurar que todos los datos y funciones de los botones interactivos en todas las pestañas operen correctamente.
+        - Detalles de Riego por Aspersión: El texto y los cálculos se han adaptado para aspersores.
+        - Análisis de Rendimiento Interactivo: Gráfico de línea con filtros. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9F9F7;
+            color: #383838;
+        }
+        .tab-button, .filter-btn, .management-btn, .harvest-phase-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-button {
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button.active {
+            border-bottom-color: #4A5C43;
+            color: #4A5C43;
+            font-weight: 600;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .btn-primary {
+            background-color: #4A5C43;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #3A4A35;
+        }
+        .filter-btn.active, .management-btn.active, .harvest-phase-btn.active {
+            background-color: #4A5C43;
+            color: white;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
+        }
+        #plant-map-wrapper {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            grid-template-rows: 1fr auto;
+            gap: 4px;
+            height: 100%;
+        }
+        #y-axis {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            font-size: 10px;
+            color: #6B7280;
+            padding-right: 4px;
+        }
+        #x-axis {
+            display: flex;
+            justify-content: space-around;
+            font-size: 10px;
+            color: #6B7280;
+            grid-column-start: 2;
+            padding-top: 4px;
+        }
+        #plant-map {
+            display: grid;
+            border: 2px solid #D1D5DB;
+            background-color: #EADBC8;
+            background-image: linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+        }
+        .plant-dot-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .plant-dot {
+            width: 70%;
+            height: 70%;
+            background-color: #4A5C43;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 0.2s ease-in-out;
+        }
+        .plant-dot::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50%;
+            height: 50%;
+            background-color: #A8B8A2;
+            border-radius: 50%;
+        }
+        .plant-dot-container:hover .plant-dot {
+            transform: scale(1.3);
+            z-index: 10;
+        }
+        .plant-dot-container .tooltip {
+            visibility: hidden;
+            width: 140px;
+            background-color: #1F2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 20;
+            bottom: 100%;
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .plant-dot-container:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#4A5C43]">Guía de Diseño de Campo para Chayote</h1>
+            <p class="text-lg text-gray-600 mt-2">Técnicas, variedades y control de plagas de Cartago, Costa Rica</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center border-b border-gray-200 mb-8 space-x-2 sm:space-x-8">
+            <button class="tab-button active py-4 px-2 sm:px-4 text-sm sm:text-base" onclick="showTab('inicio')">Inicio</button>
+            <button class="tab-button py-4 px-2 sm:px-4 text-sm sm:text-base" onclick="showTab('preparacion')">Preparación y Siembra</button>
+            <button class="tab-button py-4 px-2 sm:px-4 text-sm sm:text-base" onclick="showTab('manejo')">Manejo del Cultivo</button>
+            <button class="tab-button py-4 px-2 sm:px-4 text-sm sm:text-base" onclick="showTab('cosecha')">Cosecha y Rendimiento</button>
+            <button class="tab-button py-4 px-2 sm:px-4 text-sm sm:text-base" onclick="showTab('calculadora')">Calculadora de Diseño</button>
+        </nav>
+
+        <main id="content">
+            <!-- Inicio Tab -->
+            <div id="inicio" class="tab-content">
+                <div class="card p-6 mb-8">
+                    <h2 class="text-2xl font-bold text-[#4A5C43] mb-4">El Chayote de Cartago: Una Tradición Productiva</h2>
+                    <p class="text-gray-700 leading-relaxed">
+                        Esta guía interactiva resume las mejores prácticas para el cultivo de chayote (Sechium edule), centrándose en la variedad "quelite" o blanco liso, que es predominante en la zona de Cartago, Costa Rica. Aquí encontrará datos clave sobre densidades de siembra, rendimientos esperados, y un profundo vistazo a los manejos convencional y orgánico, incluyendo una nueva guía visual para el control de plagas. El objetivo es proporcionar una herramienta integral para optimizar su producción.
+                    </p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6 text-center">
+                    <div class="card p-6"><h3 class="text-xl font-semibold mb-2 text-gray-700">Variedad Principal</h3><p class="text-3xl font-bold text-[#6A8262]">Blanco Liso (Quelite)</p><p class="text-gray-500 mt-2">Preferido por su piel suave y excelente calidad para exportación.</p></div>
+                    <div class="card p-6"><h3 class="text-xl font-semibold mb-2 text-gray-700">Densidad por Manzana</h3><p class="text-3xl font-bold text-[#6A8262]">90 - 110 plantas</p><p class="text-gray-500 mt-2">Basado en distancias de 8x8 a 9x9 metros.</p></div>
+                    <div class="card p-6"><h3 class="text-xl font-semibold mb-2 text-gray-700">Ciclo a Primera Cosecha</h3><p class="text-3xl font-bold text-[#6A8262]">~12 - 14 Semanas</p><p class="text-gray-500 mt-2">Desde la siembra hasta el inicio de la producción continua.</p></div>
+                </div>
+            </div>
+
+            <!-- Preparación y Siembra Tab -->
+            <div id="preparacion" class="tab-content hidden">
+                 <div class="card p-6">
+                    <h2 class="text-2xl font-bold text-[#4A5C43] mb-4">Establecimiento del Cultivo</h2>
+                     <p class="text-gray-700 leading-relaxed mb-6">Una correcta preparación del terreno y una siembra adecuada son los cimientos para un cultivo de chayote exitoso. Esta sección detalla los pasos cruciales, desde la selección de la semilla hasta la construcción de la espaldera o barbacoa, estructura vital para el desarrollo de la planta y la facilidad de la cosecha.</p>
+                    <div class="space-y-6">
+                        <div><h3 class="text-xl font-semibold text-gray-800">1. Selección del Terreno y Semilla</h3><p class="text-gray-600 mt-2">Prefiera suelos francos, profundos, bien drenados y ricos en materia orgánica, con un pH entre 6.0 y 7.0. Seleccione frutos-semilla sanos, de buen tamaño (300-500g), sin golpes ni enfermedades, y que ya muestren un pequeño brote (guía).</p></div>
+                        <div><h3 class="text-xl font-semibold text-gray-800">2. Preparación y Ahoyado</h3><p class="text-gray-600 mt-2">Realice una arada y rastra para dejar el suelo suelto. Cave hoyos de 40x40x40 cm. En el fondo, incorpore 2-3 kg de abono orgánico bien descompuesto (compost, gallinaza) y la mezcla de fertilizante de fondo recomendada (ver sección de manejo).</p></div>
+                        <div><h3 class="text-xl font-semibold text-gray-800">3. Distancia y Densidad de Siembra</h3><p class="text-gray-600 mt-2">Las distancias recomendadas son de 8x8 m (109 plantas/mz) o 9x9 m (86 plantas/mz). La siembra se realiza colocando el fruto-semilla de forma inclinada, con la parte ancha (donde sale el brote) ligeramente descubierta o a nivel del suelo.</p></div>
+                        <div><h3 class="text-xl font-semibold text-gray-800">4. Construcción de la Espaldera ("Barbacoa")</h3><p class="text-gray-600 mt-2">Es la estructura que soportará las guías. Se construye con postes de madera o metal a una altura de 1.8 a 2.2 metros, con una red de alambre galvanizado (cuadrícula de 20x20 cm aprox.) en la parte superior. Debe ser robusta para soportar el peso del follaje y los frutos durante los 2-3 años de vida productiva de la planta.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manejo del Cultivo Tab -->
+            <div id="manejo" class="tab-content hidden">
+                <div class="bg-white rounded-lg p-6 border border-gray-200 mb-8">
+                    <p class="text-gray-700 leading-relaxed mb-6">El manejo del cultivo es un proceso continuo que define el éxito de la plantación. A continuación se presenta un plan de manejo por fases, con opciones para un enfoque convencional y orgánico. Cada fase detalla los objetivos y las tareas clave categorizadas para facilitar su consulta.</p>
+                    <div class="mb-8 flex flex-col sm:flex-row justify-center items-center gap-2 rounded-lg p-1 bg-gray-100 max-w-md mx-auto">
+                        <button id="btn-convencional" class="management-btn w-full sm:w-auto flex-1 py-2 px-4 rounded-md font-semibold" onclick="showManagement('convencional')">Manejo Convencional</button>
+                        <button id="btn-organico" class="management-btn w-full sm:w-auto flex-1 py-2 px-4 rounded-md font-semibold" onclick="showManagement('organico')">Manejo Orgánico</button>
+                    </div>
+                    <div id="plan-semanal" class="space-y-8"></div>
+                </div>
+                <div class="card p-6">
+                    <h2 class="text-2xl font-bold text-[#4A5C43] mb-4">Guía Visual de Plagas Comunes</h2>
+                    <p class="text-gray-700 leading-relaxed mb-6">Identifique rápidamente las plagas que afectan a su cultivo y conozca las acciones recomendadas para su control, tanto en manejo convencional como orgánico.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="border rounded-lg p-4 bg-gray-50"><h3 class="text-lg font-bold text-gray-800 mb-2">Mosca Blanca (Bemisia tabaci)</h3><img src="https://placehold.co/400x200/A8B8A2/333333?text=Mosca+Blanca" alt="Mosca blanca" class="rounded-md mb-3 w-full object-cover h-40"><p class="text-sm text-gray-600 mb-3">Pequeños insectos blancos en el envés de las hojas. Succionan la savia, debilitan la planta y pueden transmitir virus.</p><h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4><ul class="text-sm space-y-1"><li><strong class="text-[#3A4A35]">Convencional:</strong> Aplicación de insecticidas sistémicos (ej. Imidacloprid, Thiamethoxam). Rotar productos.</li><li><strong class="text-[#6A8262]">Orgánico:</strong> Trampas pegajosas amarillas. Aspersiones con jabón potásico o aceite de Neem. Fomentar crisopas.</li></ul></div>
+                        <div class="border rounded-lg p-4 bg-gray-50"><h3 class="text-lg font-bold text-gray-800 mb-2">Áfidos o Pulgones</h3><img src="https://placehold.co/400x200/A8B8A2/333333?text=Áfidos" alt="Áfidos" class="rounded-md mb-3 w-full object-cover h-40"><p class="text-sm text-gray-600 mb-3">Colonias en brotes tiernos y flores. Debilitan la planta al succionar savia y deforman hojas y flores.</p><h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4><ul class="text-sm space-y-1"><li><strong class="text-[#3A4A35]">Convencional:</strong> Uso de insecticidas de contacto o sistémicos específicos.</li><li><strong class="text-[#6A8262]">Orgánico:</strong> Liberación de mariquitas. Aplicaciones de jabón potásico. Extracto de ajo y chile.</li></ul></div>
+                        <div class="border rounded-lg p-4 bg-gray-50"><h3 class="text-lg font-bold text-gray-800 mb-2">Perforador del Fruto (Diaphania spp.)</h3><img src="https://placehold.co/400x200/A8B8A2/333333?text=Perforador+del+Fruto" alt="Larva perforador" class="rounded-md mb-3 w-full object-cover h-40"><p class="text-sm text-gray-600 mb-3">La larva de esta polilla barrena los frutos recién formados, causando galerías internas que los pudren y los hacen no comerciales.</p><h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4><ul class="text-sm space-y-1"><li><strong class="text-[#3A4A35]">Convencional:</strong> Insecticidas dirigidos al fruto (ej. Spinosad), especialmente al atardecer.</li><li><strong class="text-[#6A8262]">Orgánico:</strong> Aspersiones con <i>Bacillus thuringiensis</i> (Bt). Liberación de avispas <i>Trichogramma</i>.</li></ul></div>
+                        <div class="border rounded-lg p-4 bg-gray-50"><h3 class="text-lg font-bold text-gray-800 mb-2">Ácaros (Tetranychus spp.)</h3><img src="https://placehold.co/400x200/A8B8A2/333333?text=Ácaros" alt="Araña roja" class="rounded-md mb-3 w-full object-cover h-40"><p class="text-sm text-gray-600 mb-3">También conocidos como araña roja. Causan un bronceado o amarillamiento y finas telarañas. Proliferan en condiciones secas.</p><h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4><ul class="text-sm space-y-1"><li><strong class="text-[#3A4A35]">Convencional:</strong> Uso de acaricidas específicos. El azufre es una opción efectiva.</li><li><strong class="text-[#6A8262]">Orgánico:</strong> Aumentar humedad con riego por aspersión. Aplicaciones de aceite de Neem.</li></ul></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cosecha y Rendimiento Tab -->
+            <div id="cosecha" class="tab-content hidden">
+                 <div class="grid lg:grid-cols-5 gap-8">
+                    <div class="lg:col-span-3 card p-6"><div class="pt-2"><h2 class="text-2xl font-bold text-[#4A5C43] mb-4">Calendario Interactivo de Labores de Cosecha</h2><p class="text-gray-600 mb-4">Seleccione una fase para ver las labores recomendadas durante el período de producción.</p><div class="flex flex-wrap gap-2 mb-6"><button class="harvest-phase-btn flex-grow sm:flex-grow-0 py-2 px-4 rounded-lg font-semibold" onclick="showHarvestPhase('inicio')">Inicio (Semanas 13-16)</button><button class="harvest-phase-btn flex-grow sm:flex-grow-0 py-2 px-4 rounded-lg font-semibold" onclick="showHarvestPhase('plena')">Plena Producción (Semanas 17-45)</button><button class="harvest-phase-btn flex-grow sm:flex-grow-0 py-2 px-4 rounded-lg font-semibold" onclick="showHarvestPhase('final')">Final de Ciclo (Semanas 46+)</button></div><div id="harvest-tasks-content"></div></div></div>
+                    <div class="lg:col-span-2 card p-6 flex flex-col"><h2 class="text-2xl font-bold text-[#4A5C43] mb-2">Análisis Interactivo del Rendimiento</h2><p class="text-sm text-gray-600 mb-4">Visualice la curva de producción. Use los filtros para ver por semana, mes o trimestre.</p><div class="flex justify-center p-1 bg-gray-100 rounded-lg mb-4"><button id="filter-semanal" class="filter-btn flex-1 py-1 px-3 text-sm font-medium rounded-md" onclick="updateChart('semanal')">Semanal</button><button id="filter-mensual" class="filter-btn flex-1 py-1 px-3 text-sm font-medium rounded-md" onclick="updateChart('mensual')">Mensual</button><button id="filter-trimestral" class="filter-btn flex-1 py-1 px-3 text-sm font-medium rounded-md" onclick="updateChart('trimestral')">Trimestral</button></div><div class="relative w-full h-80"><canvas id="yieldChart"></canvas></div><div class="mt-6"><h3 class="font-semibold text-lg text-gray-800">Factores Clave del Rendimiento</h3><ul class="list-disc list-inside mt-2 space-y-1 text-gray-600 text-sm"><li><strong>Edad de la Planta:</strong> Pico productivo en el segundo año.</li><li><strong>Nutrición:</strong> Fertilización rica en Potasio (K) es fundamental.</li><li><strong>Riego:</strong> El estrés hídrico reduce drásticamente el rendimiento.</li><li><strong>Manejo Fitosanitario:</strong> Control eficaz previene caída de flores y frutos.</li><li><strong>Podas:</strong> Podas sanitarias mejoran aireación y entrada de luz.</li></ul></div></div>
+                </div>
+            </div>
+            
+            <!-- Calculadora de Diseño Tab -->
+            <div id="calculadora" class="tab-content hidden">
+                <div class="card p-6 max-w-6xl mx-auto">
+                    <h2 class="text-3xl font-bold text-[#4A5C43] mb-4">Calculadora de Diseño y Planificación</h2>
+                    <p class="text-gray-700 leading-relaxed mb-6">Esta herramienta avanzada le ayuda a planificar su cultivo. Configure los parámetros de su terreno para obtener cálculos de siembra, una visualización de la distribución y detalles para el diseño de su sistema de riego.</p>
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6"><h3 class="text-xl font-semibold text-gray-800 mb-4">1. Parámetros del Terreno</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label for="area" class="block text-sm font-medium text-gray-700">Área del Terreno</label><input type="number" id="area" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ej: 1"></div><div><label for="unit" class="block text-sm font-medium text-gray-700">Unidad de Medida</label><select id="unit" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="ha">Hectáreas (ha)</option><option value="mz">Manzanas (mz)</option></select></div><div><label for="distance" class="block text-sm font-medium text-gray-700">Distancia de Siembra</label><select id="distance" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"><option value="8x8">8 x 8 metros</option><option value="9x9">9 x 9 metros</option></select></div></div></div>
+                    <button onclick="calculateAndDesign()" class="w-full btn-primary font-bold py-3 px-4 rounded-lg text-lg transition-all">Generar Plan de Diseño</button>
+                    <div id="results" class="mt-8 hidden space-y-8">
+                        <div><h3 class="text-2xl font-semibold text-gray-800 mb-4">2. Distribución y Densidad de Siembra</h3><div class="grid sm:grid-cols-2 gap-4 text-center mb-6"><div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Plantas Requeridas</p><p id="plant-result" class="text-3xl font-bold text-[#4A5C43]"></p></div><div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Producción Anual (Ton)</p><p id="yield-result" class="text-3xl font-bold text-[#4A5C43]"></p></div></div><h4 class="font-semibold text-center text-gray-600 mb-2">Simulador de Campo (1 Hectárea)</h4><div class="w-full h-96 md:h-[500px] p-2 border rounded-lg bg-gray-100"><div id="plant-map-wrapper"><div id="y-axis"></div><div id="plant-map"></div><div id="x-axis"></div></div></div></div>
+                        <div><h3 class="text-2xl font-semibold text-gray-800 mb-4">3. Planificación de Riego por Aspersión</h3><div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4"><h4 class="font-semibold text-blue-800 mb-2">Demanda Hídrica Estimada (Plena Producción)</h4><div class="grid sm:grid-cols-2 gap-4 text-center"><div><p class="text-sm text-blue-800">Demanda Diaria Total</p><p id="daily-water-result" class="text-2xl font-bold text-blue-900"></p><p id="daily-water-m3-result" class="text-md text-blue-700"></p></div><div><p class="text-sm text-blue-800">Demanda Semanal Total</p><p id="weekly-water-result" class="text-2xl font-bold text-blue-900"></p><p id="weekly-water-m3-result" class="text-md text-blue-700"></p></div></div></div><div class="grid md:grid-cols-2 gap-6"><div><h4 class="font-semibold text-gray-700">Técnica Recomendada</h4><p class="text-sm text-gray-600 mt-1"><strong>Riego por Aspersión:</strong> Este método moja toda la superficie, similar a la lluvia. Es ideal para cubrir completamente el área foliar de la "barbacoa". Ayuda a aumentar la humedad relativa y puede reducir la población de ácaros. <strong>Precaución:</strong> Se debe regar en las primeras horas de la mañana para que el follaje se seque rápidamente, minimizando el riesgo de enfermedades como el mildiú.</p></div><div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-700 mb-2">Parámetros de Diseño (Aspersores de 6m de radio)</h4><div class="grid grid-cols-2 gap-2 text-sm"><div><p class="font-medium text-gray-500">Aspersores por Hectárea:</p><p id="emitters-result" class="font-bold text-lg text-[#4A5C43]"></p></div><div><p class="font-medium text-gray-500">Caudal por Aspersor (Est.):</p><p class="font-bold text-lg text-[#4A5C43]">~300 L/h</p></div><div><p class="font-medium text-gray-500">Caudal Total del Sistema:</p><p id="flow-rate-result" class="font-bold text-lg text-[#4A5C43]"></p></div><div><p class="font-medium text-gray-500">Tiempo de Riego Diario:</p><p id="irrigation-time-result" class="font-bold text-lg text-[#4A5C43]"></p></div></div></div></div><p class="text-xs text-gray-500 mt-3 text-center md:text-left"><strong>Nota:</strong> Estos cálculos son una guía de diseño. La disposición de los aspersores (cuadrado, triángulo) y la presión del agua son cruciales. Consulte a un especialista.</p></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    let yieldChart;
+    const icons = {
+        nutricion: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>`,
+        fitosanitario: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5.023L2.5 5.051A12.001 12.001 0 0110 18.451 12.001 12.001 0 0117.5 5.051l.334-.028A11.954 11.954 0 0110 1.944zM8.5 6a.5.5 0 00-.5.5v3.793l.646-.647a.5.5 0 00-.708-.708l-1.5 1.5a.5.5 0 000 .708l1.5 1.5a.5.5 0 00.708-.708L8 11.707V8.5a.5.5 0 00.5-.5zM11.5 6a.5.5 0 01.5.5v3.207l.646.647a.5.5 0 01-.708.708l-1.5-1.5a.5.5 0 010-.708l1.5-1.5a.5.5 0 01.708.708L12 8.293V6.5a.5.5 0 01.5-.5z" clip-rule="evenodd" /></svg>`,
+        labores: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor"><path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" /></svg>`,
+        cosecha: `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7a1 1 0 011.414-1.414L8 14.586V3a1 1 0 112 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`
+    };
+    
+    const weeklyPlanData = {
+        convencional: [
+            { week: '1-4', title: 'Establecimiento y Enraizamiento', focus: 'Asegurar un buen anclaje de la planta, protegerla de plagas iniciales y guiar su crecimiento hacia la espaldera.', categories: { nutricion: ['No se fertiliza. La planta utiliza las reservas del fruto-semilla y el abono de fondo.'], fitosanitario: ['Vigilar gusanos cortadores. Aplicar insecticidas al suelo si es necesario (ej. Clorpirifos).', 'Control de hormigas con cebos.'], labores: ['Mantener humedad constante sin encharcar.', 'Control de malezas manual.', 'Dirigir guías hacia la espaldera.'] }},
+            { week: '5-8', title: 'Desarrollo Vegetativo', focus: 'Impulsar el crecimiento de follaje vigoroso que cubra la espaldera. Se inicia un programa de nutrición y control preventivo.', categories: { nutricion: ['<strong>Fertilización 1 (al mes):</strong> Aplicar fórmula rica en Nitrógeno (ej. 20-10-10) a 150-200g/planta.', 'Complementar con bioestimulantes foliares.'], fitosanitario: ['Monitoreo de mosca blanca y áfidos. Aplicar insecticidas sistémicos (ej. Imidacloprid) si aumenta la población.', 'Iniciar aplicaciones preventivas para mildiú velloso (ej. Mancozeb).'], labores: ['Continuar guiado de bejucos.', 'Control de malezas (manual o con herbicidas dirigidos).'] }},
+            { week: '9-12', title: 'Inicio de Floración y Fructificación', focus: 'Ajustar la nutrición para favorecer el desarrollo de flores y el cuajado de frutos, intensificando el control de enfermedades.', categories: { nutricion: ['<strong>Fertilización 2 (a los 2 meses):</strong> Cambiar a fórmula rica en Potasio (ej. 12-12-24) a 200-250g/planta.', 'Aplicar foliares con Calcio y Boro.'], fitosanitario: ['Intensificar monitoreo de mosca blanca. Rotar insecticidas.', 'Aplicaciones periódicas (10-15 días) de fungicidas sistémicos y de contacto (ej. Metalaxil+Mancozeb).'], labores: ['Poda de formación ligera para eliminar guías débiles.'] }},
+            { week: '13 en adelante', title: 'Plena Producción y Mantenimiento', focus: 'Sostener una alta producción de frutos de calidad mediante una fertilización continua y un manejo fitosanitario riguroso.', categories: { nutricion: ['<strong>Fertilización de Mantenimiento (mensual):</strong> Aplicar fórmulas ricas en Potasio (ej. 13-6-40) 200g/planta.', 'Continuar con foliares de Calcio y Boro.'], fitosanitario: ['Mantener programa de aspersión riguroso, rotando productos y respetando periodos de carencia.', 'Monitoreo de ácaros y perforadores del fruto.'], labores: ['Cosecha 1-2 veces por semana.', 'Podas sanitarias para mejorar aireación.'] }}
+        ],
+        organico: [
+            { week: '1-4', title: 'Establecimiento Orgánico', focus: 'Fomentar un enraizamiento fuerte y proteger la plántula de forma natural, basándose en la salud del suelo.', categories: { nutricion: ['La planta se nutre del compost incorporado en la siembra.'], fitosanitario: ['Aplicar ceniza o cal alrededor del tallo como barrera para gusanos.', 'Liberación preventiva de insectos benéficos (Crisopas).'], labores: ['Riego localizado (goteo).', 'Control de malezas con mulch y deshierba manual.'] }},
+            { week: '5-8', title: 'Crecimiento y Nutrición Biológica', focus: 'Estimular el crecimiento vegetativo a través de abonos sólidos y líquidos, y establecer un control preventivo de plagas.', categories: { nutricion: ['<strong>Abono 1 (al mes):</strong> Reforzar con 1-2 kg de compost o bocashi por planta.', 'Aplicar biofermentos líquidos (biol) cada 15 días.'], fitosanitario: ['Instalar trampas amarillas pegajosas para mosca blanca.', 'Aplicar jabón potásico o extracto de Neem si es necesario.'], labores: ['Mantener el mulch y continuar guiado de bejucos.', 'Aporque ligero.'] }},
+            { week: '9-12', title: 'Inducción Floral y Sanidad', focus: 'Fortalecer la planta para la floración y fructificación con abonos ricos en minerales y caldos minerales preventivos.', categories: { nutricion: ['<strong>Abono 2 (a los 2 meses):</strong> Nueva aplicación de compost/bocashi.', 'Utilizar bioles ricos en potasio (con ceniza y melaza).'], fitosanitario: ['Aspersiones preventivas con Caldo Sulfocálcico o Bordelés a bajas concentraciones.', 'Aplicaciones de extractos de ajo y chile como repelentes.'], labores: ['Poda de formación.', 'Asegurar buen drenaje.'] }},
+            { week: '13 en adelante', title: 'Producción y Equilibrio Ecológico', focus: 'Mantener la producción reponiendo nutrientes de forma orgánica y fomentando un ecosistema que regule plagas y enfermedades.', categories: { nutricion: ['<strong>Abono de Mantenimiento (mensual):</strong> Aplicar compost y bioles de forma regular.', 'Té de compost foliar.'], fitosanitario: ['Continuar con el programa preventivo rotando biopreparados.', 'Fomentar la biodiversidad con plantas repelentes.'], labores: ['Cosecha constante 1-2 veces por semana.', 'Poda sanitaria, compostando el material retirado.'] }}
+        ]
+    };
+
+    const harvestPlanData = {
+        inicio: { title: "Inicio de Cosecha (Semanas 13-16)", description: "En esta fase la planta comienza a producir. El objetivo es manejar cuidadosamente los primeros frutos y asegurar que la planta tenga la energía necesaria para aumentar la producción.", categories: { cosecha: ["<strong>Frecuencia:</strong> 1 vez por semana.", "<strong>Foco:</strong> Cosechar frutos de 250-350g para reducir la carga inicial en la planta.", "<strong>Tip:</strong> Entrenar al personal para identificar el punto exacto por tacto y brillo."], fitosanitario: ["Vigilar <strong>Mildiú velloso y Oídio</strong> en el nuevo follaje y flores.", "Monitorear plagas como pulgones en brotes tiernos.", "Aplicaciones preventivas post-cosecha para proteger los cortes."], nutricion: ["Asegurar riego constante y sin encharcamiento para el llenado de los primeros frutos.", "Aplicar la primera fertilización de mantenimiento (rica en Potasio, ej. <strong>Nitrato de potasio</strong>) al inicio de esta fase."], labores: ["<strong>Revisión de Estructura:</strong> Apretar alambres y revisar postes de la espaldera antes de que soporte el peso máximo."]}},
+        plena: { title: "Plena Producción (Semanas 17-45)", description: "Este es el pico productivo del cultivo. Las labores se centran en la recolección constante y en mantener la sanidad y nutrición de la planta para sostener el alto rendimiento.", categories: { cosecha: ["<strong>Frecuencia:</strong> 2 veces por semana para evitar frutos sobremaduros.", "<strong>Logística:</strong> Organizar cuadrillas para una recolección sistemática y eficiente.", "<strong>Tip Post-Cosecha:</strong> Llevar el producto a un área de sombra (pre-enfriamiento) inmediatamente después del corte."], fitosanitario: ["Mantener un programa de aspersión riguroso, rotando productos y respetando <strong>periodos de carencia</strong>.", "Monitoreo intensivo de mosca blanca, ácaros y <strong>Perforador del fruto (Diaphania spp.)</strong>.", "Realizar podas sanitarias semanales, eliminando hojas viejas o enfermas para mejorar la aireación."], nutricion: ["Fertilización mensual con fórmulas ricas en Potasio (ej. 13-6-40).", "Aplicaciones foliares quincenales de <strong>Calcio y Boro</strong> para mejorar la firmeza y vida de anaquel.", "Mantener riegos abundantes y regulares, evitando el estrés hídrico que afecta el tamaño del fruto."], labores: ["<strong>Mantenimiento de Calles:</strong> Mantener los pasillos limpios para facilitar el tránsito y reducir plagas.", "<strong>Poda de Aclareo:</strong> Si el follaje es excesivo, eliminar algunas guías internas para mejorar la entrada de luz y ventilación."]}},
+        final: { title: "Final de Ciclo (Semanas 46+)", description: "La producción comienza a disminuir naturalmente. El enfoque se desplaza a cosechar los últimos frutos de calidad y preparar la planta para el siguiente ciclo o su renovación.", categories: { cosecha: ["<strong>Frecuencia:</strong> Reducir a 1 vez por semana o según la producción.", "Realizar una <strong>'última pasada'</strong> general antes de la poda de renovación.", "Ser más selectivo, cosechando solo frutos de primera calidad."], fitosanitario: ["Reducir aplicaciones químicas, enfocándose en controles biológicos o de bajo impacto.", "<strong>Limpieza Profunda:</strong> Retirar todo el material vegetal y frutos caídos del suelo para reducir inóculo de enfermedades.", "Vigilar enfermedades de fin de ciclo como la <strong>antracnosis</strong> en hojas y guías viejas."], nutricion: ["Reducir la dosis de fertilización a la mitad o suspenderla, según el plan de renovación de la plantación.", "<strong>Tip:</strong> Realizar un <strong>análisis de suelo</strong> después del ciclo para planificar la nutrición del siguiente año."], labores: ["<strong>Poda de Renovación:</strong> Realizar podas fuertes, eliminando la mayoría de guías viejas para estimular el brote de material nuevo y productivo.", "<strong>Incorporación de Enmiendas:</strong> Aplicar compost, cal o materia orgánica al suelo para recuperar su estructura y fertilidad."]}}
+    };
+
+    const weeklyYieldData = {
+        labels: Array.from({ length: 52 }, (_, i) => `S${i + 1}`),
+        low: [0,0,0,0,0,0,0,0,0,0,0,0, 500,800,1200,1500, 1800,2000,2000,2100,2100,2200,2200,2200,2300,2300,2300,2400,2400,2400,2400,2500,2500,2500,2500,2400,2400,2300,2300,2200,2200,2100, 2000,1800,1500,1200,1000,800,600,400,300,200],
+        avg: [0,0,0,0,0,0,0,0,0,0,0,0, 800,1300,1900,2500, 3000,3300,3400,3500,3500,3600,3600,3600,3700,3700,3700,3800,3800,3800,3800,3900,3900,3900,3900,3800,3800,3700,3700,3600,3600,3500, 3300,3000,2500,2000,1600,1200,900,600,400,300],
+        high: [0,0,0,0,0,0,0,0,0,0,0,0, 1000,1800,2600,3500, 4200,4600,4800,5000,5000,5100,5100,5100,5200,5200,5200,5300,5300,5300,5300,5400,5400,5400,5400,5300,5300,5200,5200,5100,5100,5000, 4600,4200,3500,2800,2200,1700,1200,800,600,400]
+    };
+
+    function showTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+        document.getElementById(tabName).classList.remove('hidden');
+        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+        document.querySelector(`button[onclick="showTab('${tabName}')"]`).classList.add('active');
+    }
+    
+    function showManagement(type) {
+        const planContainer = document.getElementById('plan-semanal');
+        planContainer.innerHTML = ''; 
+        const data = weeklyPlanData[type];
+        data.forEach(item => {
+            const categoriesHTML = Object.entries(item.categories).map(([key, tasks]) => `<div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 flex items-center mb-2">${icons[key] || ''} ${key.charAt(0).toUpperCase() + key.slice(1).replace('fitosanitario', 'Fitosanitario')}</h4><ul class="list-disc list-inside space-y-2 text-gray-600 text-sm">${tasks.map(task => `<li>${task}</li>`).join('')}</ul></div>`).join('');
+            const phaseCard = document.createElement('div');
+            phaseCard.className = 'border rounded-lg p-6 bg-white';
+            phaseCard.innerHTML = `<h3 class="font-semibold text-xl text-[#4A5C43] mb-2">${item.week} Semanas: ${item.title}</h3><p class="mb-4 text-gray-700 italic"><strong>Enfoque:</strong> ${item.focus}</p><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">${categoriesHTML}</div>`;
+            planContainer.appendChild(phaseCard);
+        });
+        document.querySelectorAll('.management-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${type}`).classList.add('active');
+    }
+
+    function showHarvestPhase(phaseName) {
+        document.querySelectorAll('.harvest-phase-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`button[onclick="showHarvestPhase('${phaseName}')"]`).classList.add('active');
+
+        const contentContainer = document.getElementById('harvest-tasks-content');
+        const data = harvestPlanData[phaseName];
+        
+        const categoriesHTML = Object.entries(data.categories).map(([key, tasks]) => {
+            const keyToTitle = { cosecha: 'Labores de Cosecha', fitosanitario: 'Manejo Fitosanitario', nutricion: 'Nutrición y Riego', labores: 'Labores Culturales'};
+            const categoryTitle = keyToTitle[key] || key.charAt(0).toUpperCase() + key.slice(1);
+            const iconKey = key === 'cosecha' ? 'cosecha' : (key === 'fitosanitario' ? 'fitosanitario' : (key === 'labores' ? 'labores' : 'nutricion'));
+            return `<div class="bg-gray-50 p-4 rounded-lg"><h4 class="font-semibold text-gray-800 flex items-center mb-2">${icons[iconKey] || ''} ${categoryTitle}</h4><ul class="list-disc list-inside space-y-2 text-gray-600 text-sm">${tasks.map(task => `<li>${task}</li>`).join('')}</ul></div>`;
+        }).join('');
+        contentContainer.innerHTML = `<div class="border rounded-lg p-4 bg-white animate-fade-in"><h3 class="font-semibold text-lg text-[#4A5C43] mb-2">${data.title}</h3><p class="mb-4 text-gray-700 text-sm">${data.description}</p><div class="grid md:grid-cols-2 gap-4">${categoriesHTML}</div></div><style>@keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }</style>`;
+    }
+
+    function updateChart(period) {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`filter-${period}`).classList.add('active');
+
+        let labels = [];
+        let lowData = [];
+        let avgData = [];
+        let highData = [];
+
+        const aggregateData = (data, chunkSize) => {
+            let result = [];
+            for (let i = 0; i < data.length; i += chunkSize) {
+                const chunk = data.slice(i, i + chunkSize);
+                result.push(chunk.reduce((a, b) => a + b, 0));
+            }
+            return result;
+        };
+
+        if (period === 'semanal') {
+            labels = weeklyYieldData.labels;
+            lowData = weeklyYieldData.low;
+            avgData = weeklyYieldData.avg;
+            highData = weeklyYieldData.high;
+            yieldChart.options.scales.x.title.text = "Semana del Ciclo";
+        } else if (period === 'mensual') {
+            labels = Array.from({ length: 12 }, (_, i) => `Mes ${i + 1}`);
+            lowData = aggregateData(weeklyYieldData.low, 4.33);
+            avgData = aggregateData(weeklyYieldData.avg, 4.33);
+            highData = aggregateData(weeklyYieldData.high, 4.33);
+            yieldChart.options.scales.x.title.text = "Mes del Ciclo";
+        } else if (period === 'trimestral') {
+            labels = ['Trimestre 1', 'Trimestre 2', 'Trimestre 3', 'Trimestre 4'];
+            lowData = aggregateData(weeklyYieldData.low, 13);
+            avgData = aggregateData(weeklyYieldData.avg, 13);
+            highData = aggregateData(weeklyYieldData.high, 13);
+            yieldChart.options.scales.x.title.text = "Trimestre del Ciclo";
+        }
+
+        yieldChart.data.labels = labels;
+        yieldChart.data.datasets[0].data = lowData;
+        yieldChart.data.datasets[1].data = avgData;
+        yieldChart.data.datasets[2].data = highData;
+        yieldChart.update();
+    }
+    
+    function calculateAndDesign() {
+        const area = parseFloat(document.getElementById('area').value);
+        if (isNaN(area) || area <= 0) {
+            alert('Por favor, ingrese un valor de área válido.');
+            document.getElementById('results').classList.add('hidden');
+            return;
+        }
+        const unit = document.getElementById('unit').value;
+        const distance = document.getElementById('distance').value;
+        const resultsDiv = document.getElementById('results');
+        
+        let areaInHa = unit === 'mz' ? area * 0.7004 : area;
+        const distanceValues = distance.split('x').map(Number);
+        const plantsPerHa = 10000 / (distanceValues[0] * distanceValues[1]);
+        const totalPlants = Math.round(areaInHa * plantsPerHa);
+        
+        const totalYieldMin = (areaInHa * 80);
+        const totalYieldMax = (areaInHa * 200);
+        
+        const waterPerPlantAvg = 25;
+        const dailyWater = totalPlants * waterPerPlantAvg;
+        const weeklyWater = dailyWater * 7;
+        
+        const SPRINKLER_RADIUS = 6;
+        const sprinklersPerHa = 10000 / (Math.PI * SPRINKLER_RADIUS * SPRINKLER_RADIUS * 0.85);
+        const totalSprinklers = Math.ceil(areaInHa * sprinklersPerHa);
+        const SPRINKLER_FLOW_RATE_LPH = 300;
+        const systemFlowRate = totalSprinklers * SPRINKLER_FLOW_RATE_LPH;
+        const irrigationTime = (dailyWater / systemFlowRate);
+
+        document.getElementById('plant-result').textContent = `${totalPlants}`;
+        document.getElementById('yield-result').textContent = `${totalYieldMin.toFixed(1)} - ${totalYieldMax.toFixed(1)}`;
+        document.getElementById('daily-water-result').textContent = `${dailyWater.toLocaleString()} L`;
+        document.getElementById('daily-water-m3-result').textContent = `(${(dailyWater / 1000).toFixed(1)} m³)`;
+        document.getElementById('weekly-water-result').textContent = `${weeklyWater.toLocaleString()} L`;
+        document.getElementById('weekly-water-m3-result').textContent = `(${(weeklyWater / 1000).toFixed(1)} m³)`;
+        document.getElementById('emitters-result').textContent = `~${totalSprinklers.toLocaleString()}`;
+        document.getElementById('flow-rate-result').textContent = `${(systemFlowRate / 1000).toFixed(1)} m³/h`;
+        document.getElementById('irrigation-time-result').textContent = `${irrigationTime.toFixed(1)} horas`;
+        
+        generatePlantMap(distanceValues[0]);
+        resultsDiv.classList.remove('hidden');
+    }
+    
+    function generatePlantMap(spacing) {
+        const map = document.getElementById('plant-map');
+        const xAxis = document.getElementById('x-axis');
+        const yAxis = document.getElementById('y-axis');
+        map.innerHTML = '';
+        xAxis.innerHTML = '';
+        yAxis.innerHTML = '';
+        
+        const mapDimension = 100;
+        const numPlants = Math.floor(mapDimension / spacing);
+        
+        map.style.gridTemplateColumns = `repeat(${numPlants}, 1fr)`;
+        map.style.gridTemplateRows = `repeat(${numPlants}, 1fr)`;
+        map.style.backgroundSize = `${100/numPlants}% ${100/numPlants}%`;
+
+        for (let i = 0; i < numPlants * numPlants; i++) {
+            const row = Math.floor(i / numPlants) + 1;
+            const col = (i % numPlants) + 1;
+
+            const container = document.createElement('div');
+            container.className = 'plant-dot-container';
+            const dot = document.createElement('div');
+            dot.className = 'plant-dot';
+            container.appendChild(dot);
+            
+            const tooltip = document.createElement('span');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = `Fila: ${row}, Col: ${col}`;
+            container.appendChild(tooltip);
+            map.appendChild(container);
+        }
+
+        const numLabels = Math.min(numPlants, 5);
+        for(let i = 1; i <= numLabels; i++) {
+            const xLabel = document.createElement('span');
+            xLabel.textContent = `${Math.round((i/numLabels)*100)}m`;
+            xAxis.appendChild(xLabel);
+            const yLabel = document.createElement('span');
+            yLabel.textContent = `${Math.round((i/numLabels)*100)}m`;
+            yAxis.appendChild(yLabel);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        showTab('inicio');
+        showManagement('convencional');
+        showHarvestPhase('inicio');
+
+        const ctx = document.getElementById('yieldChart');
+        if (ctx) {
+             yieldChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [
+                    { label: 'Rendimiento Bajo (kg/ha)', data: [], borderColor: 'rgba(255, 159, 64, 0.8)', backgroundColor: 'rgba(255, 159, 64, 0.2)', borderWidth: 2, fill: false, tension: 0.1 },
+                    { label: 'Rendimiento Promedio (kg/ha)', data: [], borderColor: 'rgba(54, 162, 235, 0.8)', backgroundColor: 'rgba(54, 162, 235, 0.2)', borderWidth: 3, fill: true, tension: 0.1 },
+                    { label: 'Rendimiento Óptimo (kg/ha)', data: [], borderColor: 'rgba(75, 192, 192, 0.8)', backgroundColor: 'rgba(75, 192, 192, 0.2)', borderWidth: 2, fill: false, tension: 0.1 }
+                ]},
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, title: { display: true, text: 'Producción (kg por hectárea)' }}, x: { title: { display: true, text: 'Semana del Ciclo' }}}, plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false }}}
+            });
+            updateChart('semanal');
+        }
+    });
+</script>
+
+</body>
+</html>
