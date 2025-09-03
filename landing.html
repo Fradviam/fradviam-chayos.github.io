@@ -189,17 +189,57 @@
                         <button id="btn-organico" class="management-btn w-full sm:w-auto flex-1 py-2 px-4 rounded-md font-semibold" onclick="showManagement('organico')">Manejo Orgánico</button>
                     </div>
                     <div id="plan-semanal" class="space-y-8"></div>
-                </div>
+             </div>
                 <div class="card p-6">
-                    <h2 class="text-2xl font-bold text-[#4A5C43] mb-4">Guía Visual de Plagas Comunes</h2>
-                    <p class="text-gray-700 leading-relaxed mb-6">Identifique rápidamente las plagas que afectan a su cultivo y conozca las acciones recomendadas para su control, tanto en manejo convencional como orgánico.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="border rounded-lg p-4 bg-gray-50"><h3 class="text-lg font-bold text-gray-800 mb-2">Mosca Blanca (Bemisia tabaci)</h3><img src="https://fagro.mx/img/problemas-fitosanitarios/mosca-blanca.png" alt="Mosca blanca" class="rounded-md mb-3 w-full object-cover h-40"><p class="text-sm text-gray-600 mb-3">Pequeños insectos blancos en el envés de las hojas. Succionan la savia, debilitan la planta y pueden transmitir virus.</p><h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4><ul class="text-sm space-y-1"><li><strong class="text-[#3A4A35]">Convencional:</strong> Aplicación de insecticidas sistémicos (ej. Imidacloprid, Thiamethoxam). Rotar productos.</li><li><strong class="text-[#6A8262]">Orgánico:</strong> Trampas pegajosas amarillas. Aspersiones con jabón potásico o aceite de Neem. Fomentar crisopas.</li></ul></div>
-                        <div class="border rounded-lg p-4 bg-gray-50"><h3 class="text-lg font-bold text-gray-800 mb-2">Áfidos o Pulgones</h3><img src="https://uribsin.com/wp-content/uploads/2022/01/plaga-del-pulgon.jpg" alt="Áfidos" class="rounded-md mb-3 w-full object-cover h-40"><p class="text-sm text-gray-600 mb-3">Colonias en brotes tiernos y flores. Debilitan la planta al succionar savia y deforman hojas y flores.</p><h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4><ul class="text-sm space-y-1"><li><strong class="text-[#3A4A35]">Convencional:</strong> Uso de CYR Piretirina.</li><li><strong class="text-[#6A8262]">Orgánico:</strong> Liberación de mariquitas. Aplicaciones de jabón potásico. Extracto de ajo y chile.</li></ul></div>
-                        <div class="border rounded-lg p-4 bg-gray-50"><h3 class="text-lg font-bold text-gray-800 mb-2">Perforador del Fruto (Diaphania spp.)</h3><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSr-l77u2B2Jc4H5AZ3awYHEDEzgFnuCSLLkQ&s" alt="Larva perforador" class="rounded-md mb-3 w-full object-cover h-40"><p class="text-sm text-gray-600 mb-3">La larva de esta polilla barrena los frutos recién formados, causando galerías internas que los pudren y los hacen no comerciales.</p><h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4><ul class="text-sm space-y-1"><li><strong class="text-[#3A4A35]">Convencional:</strong> Insecticidas dirigidos al fruto (ej. Spinosad), especialmente al atardecer.</li><li><strong class="text-[#6A8262]">Orgánico:</strong> Aspersiones con <i>Bacillus thuringiensis</i> (Bt). Liberación de avispas <i>Trichogramma</i>.</li></ul></div>
-                        <div class="border rounded-lg p-4 bg-gray-50"><h3 class="text-lg font-bold text-gray-800 mb-2">Ácaros (Tetranychus spp.)</h3><img src="https://placehold.co/400x200/A8B8A2/333333?text=Ácaros" alt="Araña roja" class="rounded-md mb-3 w-full object-cover h-40"><p class="text-sm text-gray-600 mb-3">También conocidos como araña roja. Causan un bronceado o amarillamiento y finas telarañas. Proliferan en condiciones secas.</p><h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4><ul class="text-sm space-y-1"><li><strong class="text-[#3A4A35]">Convencional:</strong> Uso de acaricidas específicos. El azufre es una opción efectiva.</li><li><strong class="text-[#6A8262]">Orgánico:</strong> Aumentar humedad con riego por aspersión. Aplicaciones de aceite de Neem.</li></ul></div>
+                <h2 class="text-2xl font-bold text-[#4A5C43] mb-4">Guía Visual de Plagas Comunes</h2>
+                <p class="text-gray-700 leading-relaxed mb-6">Identifique rápidamente las plagas que afectan a su cultivo y conozca las acciones recomendadas para su control, tanto en manejo convencional como orgánico.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">Mosca Blanca (Bemisia tabaci)</h3>
+                        <img src="https://fagro.mx/img/problemas-fitosanitarios/mosca-blanca.png" alt="Mosca blanca" class="rounded-md mb-3 w-full">
+                        <p class="text-sm text-gray-600 mb-3">Pequeños insectos blancos en el envés de las hojas. Succionan la savia, debilitan la planta y pueden transmitir virus.</p>
+                        <h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4>
+                        <ul class="text-sm space-y-1">
+                            <li><strong class="text-[#3A4A35]">Convencional:</strong> Aplicación de insecticidas sistémicos (ej. Imidacloprid, Thiamethoxam). Rotar productos.</li>
+                            <li><strong class="text-[#6A8262]">Orgánico:</strong> Trampas pegajosas amarillas. Aspersiones con jabón potásico o aceite de Neem. Fomentar crisopas.</li>
+                        </ul>
                     </div>
-                </div>
+                    
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">Áfidos o Pulgones</h3>
+                        <img src="https://uribsin.com/wp-content/uploads/2022/01/plaga-del-pulgon.jpg" alt="Áfidos" class="rounded-md mb-3 w-full">
+                        <p class="text-sm text-gray-600 mb-3">Colonias en brotes tiernos y flores. Debilitan la planta al succionar savia y deforman hojas y flores.</p>
+                        <h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4>
+                        <ul class="text-sm space-y-1">
+                            <li><strong class="text-[#3A4A35]">Convencional:</strong> Uso de CYR Piretirina.</li>
+                            <li><strong class="text-[#6A8262]">Orgánico:</strong> Liberación de mariquitas. Aplicaciones de jabón potásico. Extracto de ajo y chile.</li>
+                        </ul>
+                    </div>
+
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">Perforador del Fruto (Diaphania spp.)</h3>
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSr-l77u2B2Jc4H5AZ3awYHEDEzgFnuCSLLkQ&s" alt="Larva perforador" class="rounded-md mb-3 w-full">
+                        <p class="text-sm text-gray-600 mb-3">La larva de esta polilla barrena los frutos recién formados, causando galerías internas que los pudren y los hacen no comerciales.</p>
+                        <h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4>
+                        <ul class="text-sm space-y-1">
+                            <li><strong class="text-[#3A4A35]">Convencional:</strong> Insecticidas dirigidos al fruto (ej. Spinosad), especialmente al atardecer.</li>
+                            <li><strong class="text-[#6A8262]">Orgánico:</strong> Aspersiones con <i>Bacillus thuringiensis</i> (Bt). Liberación de avispas <i>Trichogramma</i>.</li>
+                        </ul>
+                    </div>
+
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">Ácaros (Tetranychus spp.)</h3>
+                        <img src="https://i0.wp.com/www.agrohuerto.com/wp-content/uploads/2015/11/vejiga-del-chayote.jpg?resize=568%2C461&ssl=1" alt="Araña roja" class="rounded-md mb-3 w-full">
+                        <p class="text-sm text-gray-600 mb-3">También conocidos como araña roja. Causan un bronceado o amarillamiento y finas telarañas. Proliferan en condiciones secas.</p>
+                        <h4 class="font-semibold text-gray-700 mb-2">Métodos de Control:</h4>
+                        <ul class="text-sm space-y-1">
+                            <li><strong class="text-[#3A4A35]">Convencional:</strong> Uso de acaricidas específicos. El azufre es una opción efectiva.</li>
+                            <li><strong class="text-[#6A8262]">Orgánico:</strong> Aumentar humedad con riego por aspersión. Aplicaciones de aceite de Neem.</li>
+                        </ul>
+                 </div>
+        </div>
+    </div>
             </div>
             
             <!-- Cosecha y Rendimiento Tab -->
