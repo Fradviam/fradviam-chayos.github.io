@@ -17,7 +17,7 @@
         - Detalles de Riego por Aspersión: El texto y los cálculos se han adaptado para aspersores.
         - Análisis de Rendimiento Interactivo: Gráfico de línea con filtros. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-    <style>
+  <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #F9F9F7;
@@ -59,22 +59,14 @@
             gap: 4px;
             height: 100%;
         }
-        #y-axis {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            font-size: 10px;
-            color: #6B7280;
-            padding-right: 4px;
-        }
-        #x-axis {
+        #y-axis, #x-axis {
             display: flex;
             justify-content: space-around;
             font-size: 10px;
             color: #6B7280;
-            grid-column-start: 2;
-            padding-top: 4px;
         }
+        #y-axis { flex-direction: column; padding-right: 4px; }
+        #x-axis { grid-column-start: 2; padding-top: 4px; }
         #plant-map {
             display: grid;
             border: 2px solid #D1D5DB;
@@ -89,47 +81,30 @@
             cursor: pointer;
         }
         .plant-dot {
-            width: 70%;
-            height: 70%;
+            width: 70%; height: 70%;
             background-color: #4A5C43;
             border-radius: 50%;
             position: relative;
             transition: transform 0.2s ease-in-out;
         }
         .plant-dot::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
+            content: ''; position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 50%;
-            height: 50%;
+            width: 50%; height: 50%;
             background-color: #A8B8A2;
             border-radius: 50%;
         }
         .plant-dot-container:hover .plant-dot {
-            transform: scale(1.3);
-            z-index: 10;
+            transform: scale(1.3); z-index: 10;
         }
         .plant-dot-container .tooltip {
-            visibility: hidden;
-            width: 140px;
-            background-color: #1F2937;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px 0;
-            position: absolute;
-            z-index: 20;
-            bottom: 100%;
-            left: 50%;
-            margin-left: -70px;
-            opacity: 0;
-            transition: opacity 0.3s;
+            visibility: hidden; width: 140px; background-color: #1F2937; color: #fff;
+            text-align: center; border-radius: 6px; padding: 5px 0;
+            position: absolute; z-index: 20; bottom: 100%; left: 50%;
+            margin-left: -70px; opacity: 0; transition: opacity 0.3s;
         }
         .plant-dot-container:hover .tooltip {
-            visibility: visible;
-            opacity: 1;
+            visibility: visible; opacity: 1;
         }
     </style>
 </head>
@@ -243,13 +218,45 @@
             </div>
             
             <!-- Cosecha y Rendimiento Tab -->
-            <div id="cosecha" class="tab-content hidden">
+         <div id="cosecha" class="tab-content hidden">
                  <div class="grid lg:grid-cols-5 gap-8">
                     <div class="lg:col-span-3 card p-6"><div class="pt-2"><h2 class="text-2xl font-bold text-[#4A5C43] mb-4">Calendario Interactivo de Labores de Cosecha</h2><p class="text-gray-600 mb-4">Seleccione una fase para ver las labores recomendadas durante el período de producción.</p><div class="flex flex-wrap gap-2 mb-6"><button class="harvest-phase-btn flex-grow sm:flex-grow-0 py-2 px-4 rounded-lg font-semibold" onclick="showHarvestPhase('inicio')">Inicio (Semanas 13-16)</button><button class="harvest-phase-btn flex-grow sm:flex-grow-0 py-2 px-4 rounded-lg font-semibold" onclick="showHarvestPhase('plena')">Plena Producción (Semanas 17-45)</button><button class="harvest-phase-btn flex-grow sm:flex-grow-0 py-2 px-4 rounded-lg font-semibold" onclick="showHarvestPhase('final')">Final de Ciclo (Semanas 46+)</button></div><div id="harvest-tasks-content"></div></div></div>
-                    <div class="lg:col-span-2 card p-6 flex flex-col"><h2 class="text-2xl font-bold text-[#4A5C43] mb-2">Análisis Interactivo del Rendimiento</h2><p class="text-sm text-gray-600 mb-4">Visualice la curva de producción. Use los filtros para ver por semana, mes o trimestre.</p><div class="flex justify-center p-1 bg-gray-100 rounded-lg mb-4"><button id="filter-semanal" class="filter-btn flex-1 py-1 px-3 text-sm font-medium rounded-md" onclick="updateChart('semanal')">Semanal</button><button id="filter-mensual" class="filter-btn flex-1 py-1 px-3 text-sm font-medium rounded-md" onclick="updateChart('mensual')">Mensual</button><button id="filter-trimestral" class="filter-btn flex-1 py-1 px-3 text-sm font-medium rounded-md" onclick="updateChart('trimestral')">Trimestral</button></div><div class="relative w-full h-80"><canvas id="yieldChart"></canvas></div><div class="mt-6"><h3 class="font-semibold text-lg text-gray-800">Factores Clave del Rendimiento</h3><ul class="list-disc list-inside mt-2 space-y-1 text-gray-600 text-sm"><li><strong>Edad de la Planta:</strong> Pico productivo en el segundo año.</li><li><strong>Nutrición:</strong> Fertilización rica en Potasio (K) es fundamental.</li><li><strong>Riego:</strong> El estrés hídrico reduce drásticamente el rendimiento.</li><li><strong>Manejo Fitosanitario:</strong> Control eficaz previene caída de flores y frutos.</li><li><strong>Podas:</strong> Podas sanitarias mejoran aireación y entrada de luz.</li></ul></div></div>
+                    <div class="lg:col-span-2 card p-6 flex flex-col"><h2 class="text-2xl font-bold text-[#4A5C43] mb-2">Análisis Interactivo del Rendimiento</h2><p class="text-sm text-gray-600 mb-4">Visualice la curva de producción en **libras por manzana**. Use los filtros para ver por semana, mes o trimestre.</p><div class="flex justify-center p-1 bg-gray-100 rounded-lg mb-4"><button id="filter-semanal" class="filter-btn flex-1 py-1 px-3 text-sm font-medium rounded-md" onclick="updateChart('semanal')">Semanal</button><button id="filter-mensual" class="filter-btn flex-1 py-1 px-3 text-sm font-medium rounded-md" onclick="updateChart('mensual')">Mensual</button><button id="filter-trimestral" class="filter-btn flex-1 py-1 px-3 text-sm font-medium rounded-md" onclick="updateChart('trimestral')">Trimestral</button></div><div class="relative w-full h-80"><canvas id="yieldChart"></canvas></div><div class="mt-6"><h3 class="font-semibold text-lg text-gray-800">Factores Clave del Rendimiento</h3><ul class="list-disc list-inside mt-2 space-y-1 text-gray-600 text-sm"><li><strong>Edad de la Planta:</strong> Pico productivo en el segundo año.</li><li><strong>Nutrición:</strong> Fertilización rica en Potasio (K) es fundamental.</li><li><strong>Riego:</strong> El estrés hídrico reduce drásticamente el rendimiento.</li><li><strong>Manejo Fitosanitario:</strong> Control eficaz previene caída de flores y frutos.</li><li><strong>Podas:</strong> Podas sanitarias mejoran aireación y entrada de luz.</li></ul></div></div>
+                    <div class="lg:col-span-5 card p-6 mt-8">
+                        <h2 class="text-2xl font-bold text-[#4A5C43] mb-4">Calculadora de Ganancias por Rendimiento</h2>
+                        <p class="text-gray-600 mb-4">
+                            Estime sus ingresos potenciales. Ingrese el precio de venta por libra y seleccione un escenario de rendimiento para ver la proyección anual.
+                        </p>
+                        <div class="grid md:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label for="price-per-lb" class="block text-sm font-medium text-gray-700">Precio de Venta por Libra (LPS)</label>
+                                <input type="number" id="price-per-lb" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ej: 15.50">
+                            </div>
+                            <div>
+                                <label for="yield-scenario" class="block text-sm font-medium text-gray-700">Escenario de Rendimiento</label>
+                                <select id="yield-scenario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="low">Bajo</option>
+                                    <option value="avg" selected>Promedio</option>
+                                    <option value="high">Óptimo</option>
+                                </select>
+                            </div>
+                            <button onclick="calculateProfit()" class="w-full btn-primary font-bold py-2 px-4 rounded-lg">Calcular Ganancias</button>
+                        </div>
+                        <div id="profit-results" class="mt-6 hidden">
+                            <div class="grid sm:grid-cols-2 gap-4 text-center">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-500">Producción Anual Total (lb/mz)</p>
+                                    <p id="profit-yield-result" class="text-3xl font-bold text-[#4A5C43]"></p>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                    <p class="text-sm text-green-800">Ingreso Bruto Anual Estimado</p>
+                                    <p id="profit-revenue-result" class="text-3xl font-bold text-green-700"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
             <!-- Calculadora de Diseño Tab -->
             <div id="calculadora" class="tab-content hidden">
                 <div class="card p-6 max-w-6xl mx-auto">
@@ -410,6 +417,21 @@
             document.getElementById('irrigation-time-result').textContent = `${irrigationTime.toFixed(1)} horas`;
             generatePlantMap(distanceValues[0]);
             resultsDiv.classList.remove('hidden');
+        }
+        
+        function calculateProfit() {
+            const priceInput = document.getElementById('price-per-lb');
+            const price = parseFloat(priceInput.value);
+            if (isNaN(price) || price <= 0) {
+                alert('Por favor, ingrese un precio válido.');
+                return;
+            }
+            const scenario = document.getElementById('yield-scenario').value;
+            const totalYield = annualYieldsLbMz[scenario];
+            const totalRevenue = totalYield * price;
+            document.getElementById('profit-yield-result').textContent = `${totalYield.toLocaleString('es-HN', { maximumFractionDigits: 0 })} lb`;
+            document.getElementById('profit-revenue-result').textContent = `L ${totalRevenue.toLocaleString('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('profit-results').classList.remove('hidden');
         }
         
         function generatePlantMap(spacing) {
